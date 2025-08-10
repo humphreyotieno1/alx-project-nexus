@@ -1,5 +1,29 @@
-# Use the same build stage as the main Dockerfile
+# Stage 1: Builder (install dependencies)
+FROM python:3.12-slim AS builder
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip dependencies into /install directory
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+    && pip install --prefix=/install -r requirements.txt
+
+# Copy project files
+COPY . .
+
+# Stage 2: Celery runtime
 FROM python:3.12-slim
+
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -7,13 +31,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and switch to a non-root user
-RUN useradd -m appuser && mkdir -p /app && chown -R appuser:appuser /app
+RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Set work directory and environment variables
-WORKDIR /app
+# Set environment variables
 ENV PATH="/home/appuser/.local/bin:$PATH"
 ENV PYTHONPATH="/app"
+ENV C_FORCE_ROOT="true"
 
 # Copy installed packages from builder
 COPY --from=builder --chown=appuser:appuser /install /usr/local
@@ -21,5 +45,5 @@ COPY --from=builder --chown=appuser:appuser /install /usr/local
 # Copy application code
 COPY --chown=appuser:appuser . .
 
-# Command to run the Celery worker
+# Command for Celery worker
 CMD ["celery", "-A", "ecommerce", "worker", "--loglevel=info"]

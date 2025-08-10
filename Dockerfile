@@ -1,32 +1,29 @@
-# Build stage
-FROM python:3.12-slim as builder
+# Stage 1: Builder (install dependencies)
+FROM python:3.12-slim AS builder
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONHASHSEED=random \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PIP_DEFAULT_TIMEOUT=100
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+    gcc \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set work directory
-WORKDIR /app
-
-# Copy requirements first to leverage Docker cache
+# Install pip dependencies into /install directory
 COPY requirements.txt .
-RUN pip install --prefix=/install -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --prefix=/install -r requirements.txt
 
-# Copy the rest of the application
+# Copy project files
 COPY . .
 
-# Runtime stage
+# Stage 2: Web runtime
 FROM python:3.12-slim
+
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,11 +31,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and switch to a non-root user
-RUN useradd -m appuser && mkdir -p /app && chown -R appuser:appuser /app
+RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Set work directory and environment variables
-WORKDIR /app
+# Set environment variables
 ENV PATH="/home/appuser/.local/bin:$PATH"
 ENV PYTHONPATH="/app"
 
@@ -48,10 +44,8 @@ COPY --from=builder --chown=appuser:appuser /install /usr/local
 # Copy application code
 COPY --chown=appuser:appuser . .
 
-ENV SECRET_KEY=ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
-
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
-# Use gunicorn as the production server
+# Command for Django + Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "--workers", "4", "--threads", "4", "ecommerce.wsgi"]
