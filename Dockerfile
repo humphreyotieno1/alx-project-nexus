@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install pip dependencies into /install directory
 COPY requirements.txt .
-RUN pip install --upgrade pip \
-    && pip install --prefix=/install -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt --root-user-action=ignore
+
 
 # Copy project files
 COPY . .
