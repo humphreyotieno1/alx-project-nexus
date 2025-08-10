@@ -101,7 +101,7 @@ WSGI_APPLICATION = "ecommerce.wsgi.application"
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=env('DATABASE_URL'),
+        default=env('DATABASE_URL', default=""),
         conn_max_age=600,
     )
 }
@@ -155,14 +155,14 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="")
 
 # Configure CELERY settings
 # Add this to your Celery settings
-CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
-CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://redis:6379/0")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://redis:6379/0")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
@@ -200,16 +200,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # orders defaults.
 """The defaults below are bound to change from one region to the other."""
-DEFAULT_SHIPPING_COST = env("DEFAULT_SHIPPING_COST")
-TAX_RATE = env("TAX_RATE")
+DEFAULT_SHIPPING_COST = env("DEFAULT_SHIPPING_COST", default=0)
+TAX_RATE = env("TAX_RATE", default=0)
 
-PAYMENT_CALLBACK_URLS = json.loads(os.getenv("PAYMENT_CALLBACK_URLS", "{}"))
-CHAPA_SECRET_KEY = env("CHAPA_SECRET_KEY")
-CHAPA_PUBLIC_KEY = env("CHAPA_PUBLIC_KEY")
+PAYMENT_CALLBACK_URLS = json.loads(os.getenv("PAYMENT_CALLBACK_URLS", default="{}"))
+CHAPA_SECRET_KEY = env("CHAPA_SECRET_KEY", default="")
+CHAPA_PUBLIC_KEY = env("CHAPA_PUBLIC_KEY", default="")
 
 
 # CORS SETUP
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", default="").split(",")
 
 if not DEBUG:
     # Trust the X-Forwarded-Proto header from Railway
