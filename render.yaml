@@ -4,11 +4,9 @@ services:
     name: alx-project-nexus-web
     env: python
     buildCommand: |
-      pip install poetry
-      poetry config virtualenvs.create false
-      poetry install --no-interaction --no-ansi --no-root --without dev
+      pip install -r requirements.txt
       python manage.py collectstatic --noinput
-    startCommand: gunicorn ecommerce.wsgi:application --log-file -
+    startCommand: gunicorn ecommerce.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -28,6 +26,10 @@ services:
         fromService:
           type: redis
           property: connectionString
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PYTHONDONTWRITEBYTECODE
+        value: "1"
     plan: free
     numInstances: 1
 
@@ -35,10 +37,7 @@ services:
   - type: worker
     name: alx-project-nexus-worker
     env: python
-    buildCommand: |
-      pip install poetry
-      poetry config virtualenvs.create false
-      poetry install --no-interaction --no-ansi --no-root --without dev
+    buildCommand: pip install -r requirements.txt
     startCommand: celery -A ecommerce worker --loglevel=info
     envVars:
       - key: DATABASE_URL
@@ -49,6 +48,8 @@ services:
         fromService:
           name: alx-project-nexus-web
           property: SECRET_KEY
+      - key: DEBUG
+        value: "False"
       - key: CELERY_BROKER_URL
         fromService:
           type: redis
@@ -57,6 +58,10 @@ services:
         fromService:
           type: redis
           property: connectionString
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: C_FORCE_ROOT
+        value: "true"
     plan: free
     numInstances: 1
 
