@@ -16,6 +16,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+import dj_database_url
 
 env = environ.Env(DEBUG=(bool, False))
 
@@ -99,14 +100,10 @@ WSGI_APPLICATION = "ecommerce.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#database
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
-        "HOST": env("DB_HOST"),
-        "PORT": env("DB_PORT"),
-    }
+    'default': dj_database_url.config(
+        default=env('DATABASE_URL'),
+        conn_max_age=600,
+    )
 }
 
 

@@ -1,0 +1,66 @@
+services:
+  # Web service
+  - type: web
+    name: alx-project-nexus-web
+    env: python
+    buildCommand: |
+      pip install poetry
+      poetry config virtualenvs.create false
+      poetry install --no-interaction --no-ansi --no-root --without dev
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn ecommerce.wsgi:application --log-file -
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: neondb
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          property: connectionString
+    plan: free
+    numInstances: 1
+
+  # Celery worker
+  - type: worker
+    name: alx-project-nexus-worker
+    env: python
+    buildCommand: |
+      pip install poetry
+      poetry config virtualenvs.create false
+      poetry install --no-interaction --no-ansi --no-root --without dev
+    startCommand: celery -A ecommerce worker --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          name: alx-project-nexus-web
+          property: DATABASE_URL
+      - key: SECRET_KEY
+        fromService:
+          name: alx-project-nexus-web
+          property: SECRET_KEY
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          property: connectionString
+    plan: free
+    numInstances: 1
+
+  # Redis for Celery
+  - type: redis
+    name: redis
+    plan: free
