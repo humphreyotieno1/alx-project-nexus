@@ -12,6 +12,8 @@ globals:
       value: 1
     - key: DJANGO_SETTINGS_MODULE
       value: ecommerce.settings
+    - key: DJANGO_ENV
+      value: production
 
 # Define the services to deploy
 services:

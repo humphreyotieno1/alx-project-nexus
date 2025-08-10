@@ -5,7 +5,9 @@ FROM python:3.11-slim as builder
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    # Set a default SECRET_KEY for build time
+    SECRET_KEY=build-key-temporary
 
 # Set work directory
 WORKDIR /app
@@ -23,10 +25,12 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.t
 # Final stage
 FROM python:3.11-slim
 
-# Set environment variables
+# Set environment variables with defaults
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH="/app/.local/bin:$PATH"
+    PATH="/app/.local/bin:$PATH" \
+    # Set default SECRET_KEY that will be overridden by environment if provided
+    SECRET_KEY=default-insecure-key-change-me
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,12 +46,19 @@ USER appuser
 
 # Copy Python wheels from builder
 COPY --from=builder --chown=appuser:appuser /app/wheels /wheels
-COPY --chown=appuser:appuser . .
 
-# Install application dependencies
+# Install application dependencies first (faster builds when only code changes)
 RUN pip install --no-cache /wheels/*
 
-# Collect static files
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Generate a secure secret key if not set (for development only)
+RUN if [ "$SECRET_KEY" = "default-insecure-key-change-me" ]; then \
+    export SECRET_KEY=$(python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'); \
+    fi
+
+# Collect static files (will use the generated or provided SECRET_KEY)
 RUN python manage.py collectstatic --noinput || echo "Warning: Collectstatic failed, but continuing build"
 
 # Expose the port the app runs on
