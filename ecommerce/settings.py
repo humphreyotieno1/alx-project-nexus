@@ -39,7 +39,7 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
 AUTH_USER_MODEL = "users.User"
 
-FRONTEND_URL = env("FRONTEND_URL")
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
 # Application definition
 
 SWAGGER_USE_COMPAT_RENDERERS = False
