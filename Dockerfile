@@ -20,7 +20,7 @@ WORKDIR /app
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --user -r requirements.txt
+RUN pip install --prefix=/install -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
@@ -42,9 +42,11 @@ WORKDIR /app
 ENV PATH="/home/appuser/.local/bin:$PATH"
 ENV PYTHONPATH="/app"
 
-# Copy from builder stage
-COPY --from=builder --chown=appuser:appuser /home/appuser/.local /home/appuser/.local
-COPY --from=builder --chown=appuser:appuser /app/ .
+# Copy installed packages from builder
+COPY --from=builder --chown=appuser:appuser /install /usr/local
+
+# Copy application code
+COPY --chown=appuser:appuser . .
 
 # Collect static files
 RUN python manage.py collectstatic --noinput
