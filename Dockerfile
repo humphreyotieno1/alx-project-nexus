@@ -48,6 +48,8 @@ COPY --from=builder --chown=appuser:appuser /install /usr/local
 # Copy application code
 COPY --chown=appuser:appuser . .
 
+ENV SECRET_KEY=ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
+
 # Collect static files
 RUN python manage.py collectstatic --noinput
 
