@@ -20,7 +20,7 @@ WORKDIR /app
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --user -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
@@ -34,16 +34,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Create and switch to a non-root user
-RUN useradd -m appuser && chown -R appuser /app
+RUN useradd -m appuser && mkdir -p /app && chown -R appuser:appuser /app
 USER appuser
 
 # Set work directory and environment variables
 WORKDIR /app
 ENV PATH="/home/appuser/.local/bin:$PATH"
+ENV PYTHONPATH="/app"
 
 # Copy from builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
-COPY --from=builder /usr/local/bin/ /usr/local/bin/
+COPY --from=builder --chown=appuser:appuser /home/appuser/.local /home/appuser/.local
 COPY --from=builder --chown=appuser:appuser /app/ .
 
 # Collect static files

@@ -2,11 +2,14 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      target: builder
     command: >
-      sh -c "python manage.py migrate &&
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
              python manage.py collectstatic --no-input &&
-             python manage.py runserver 0.0.0.0:8000"
+             gunicorn ecommerce.wsgi:application --bind 0.0.0.0:8000"
     volumes:
       - .:/app
     ports:
@@ -18,8 +21,10 @@ services:
     restart: unless-stopped
 
   celery:
-    build: .
-    command: celery -A ecommerce worker -l info
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    command: celery -A ecommerce worker --loglevel=info
     volumes:
       - .:/app
     env_file:
