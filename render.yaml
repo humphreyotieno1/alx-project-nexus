@@ -1,7 +1,26 @@
+# Render Configuration File
+# Reference: https://render.com/docs/deploy-render-yaml
+
+# Global settings for all services
+globals:
+  envVars:
+    - key: PYTHON_VERSION
+      value: 3.11.7
+    - key: PYTHONUNBUFFERED
+      value: 1
+    - key: PYTHONDONTWRITEBYTECODE
+      value: 1
+    - key: DJANGO_SETTINGS_MODULE
+      value: ecommerce.settings
+
+# Define the services to deploy
 services:
+  # Web service
   - type: web
     name: alx-project-nexus-web
     env: python
+    region: oregon
+    plan: free
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput || echo "Warning: Collectstatic failed, but continuing build"
@@ -17,11 +36,47 @@ services:
         value: "False"
       - key: ALLOWED_HOSTS
         value: "*"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      - key: PYTHONDONTWRITEBYTECODE
-        value: "1"
-      - key: DJANGO_SETTINGS_MODULE
-        value: "ecommerce.settings"
-    plan: free
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          property: connectionString
+    autoDeploy: true
     numInstances: 1
+
+  # Celery worker
+  - type: worker
+    name: alx-project-nexus-worker
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A ecommerce worker --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          name: alx-project-nexus-web
+          property: DATABASE_URL
+      - key: SECRET_KEY
+        fromService:
+          name: alx-project-nexus-web
+          property: SECRET_KEY
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          property: connectionString
+      - key: C_FORCE_ROOT
+        value: "true"
+    numInstances: 1
+
+  # Redis service
+  - type: redis
+    name: alx-project-nexus-redis
+    plan: free
