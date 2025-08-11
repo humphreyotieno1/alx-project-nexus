@@ -103,9 +103,9 @@ services:
       - key: ALLOWED_HOSTS
         value: "*"
       - key: SECRET_KEY
-        value: dummy-key-for-build
+        value: ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
       - key: DATABASE_URL
-        value: "sqlite:///db.sqlite3"
+        value: "postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"
     autoDeploy: true
 
   # Redis service
