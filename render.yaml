@@ -27,7 +27,7 @@ services:
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 4 ecommerce.wsgi:application
     envVars:
       - key: SECRET_KEY
-        generateValue: true
+        value: ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
