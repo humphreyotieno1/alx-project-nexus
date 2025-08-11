@@ -30,7 +30,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     # Default values for build time
     SECRET_KEY=ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7 \
     DEBUG=False \
-    ALLOWED_HOSTS=* \
+    ALLOWED_HOSTS=alx-project-nexus-657z.onrender.com,localhost,127.0.0.1 \
     FRONTEND_URL=http://localhost:3000 \
     DATABASE_URL=postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require \
     DJANGO_SETTINGS_MODULE=ecommerce.settings \
@@ -66,6 +66,9 @@ COPY . .
 # Create a script to handle collectstatic with fallbacks and run the application
 RUN echo '#!/bin/sh\n\
 # Set default environment variables if not set\n\
+if [ -z "$ALLOWED_HOSTS" ]; then\n\
+    export ALLOWED_HOSTS="alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"\n\
+fi\n\
 if [ -z "$SECRET_KEY" ]; then\n\
     export SECRET_KEY="ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa\$t!m@zbrog60u=cj_7"\n\
 fi\n\

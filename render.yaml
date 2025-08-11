@@ -32,7 +32,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: "*"
+        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
       - key: DATABASE_URL
         fromDatabase:
           name: alx-project-nexus-db
@@ -55,7 +55,7 @@ services:
         value: "0.16"
     buildEnvVars:
       - key: ALLOWED_HOSTS
-        value: "*"
+        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
       - key: SECRET_KEY
         value: ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
       - key: FRONTEND_URL
@@ -86,7 +86,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: "*"
+        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
       - key: DATABASE_URL
         fromService:
           name: alx-project-nexus-web
@@ -101,7 +101,7 @@ services:
           property: connectionString
     buildEnvVars:
       - key: ALLOWED_HOSTS
-        value: "*"
+        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
       - key: SECRET_KEY
         value: ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
       - key: DATABASE_URL
