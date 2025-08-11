@@ -47,8 +47,15 @@ services:
         value: "10.00"
       - key: TAX_RATE
         value: "0.16"
+    buildEnvVars:
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: SECRET_KEY
+        value: dummy-key-for-build
     autoDeploy: true
     numInstances: 1
+    healthCheckPath: /
+    healthCheckTimeout: 120
 
   # Celery worker
   - type: worker
@@ -57,6 +64,10 @@ services:
     region: oregon
     plan: free
     dockerfile: Dockerfile
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+    startCommand: celery -A ecommerce worker -l info
     envVars:
       - key: CELERY_BROKER_URL
         fromService:
@@ -66,10 +77,17 @@ services:
         fromService:
           type: redis
           property: connectionString
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: celery -A ecommerce worker -l info
+      - key: SECRET_KEY
+        value: ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require
+    buildEnvVars:
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: SECRET_KEY
+        value: dummy-key-for-build
     autoDeploy: true
 
   # Redis service

@@ -23,7 +23,7 @@ RUN pip install --upgrade pip && \
 # Final stage
 FROM python:3.11-slim
 
-# Set environment variables
+# Set environment variables for build and runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.local/bin:$PATH" \
