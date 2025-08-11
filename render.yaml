@@ -23,7 +23,6 @@ services:
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
-      python manage.py collectstatic --noinput
     startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 4 ecommerce.wsgi:application
     envVars:
       - key: SECRET_KEY
@@ -70,11 +69,10 @@ services:
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
-      python manage.py collectstatic --noinput
     startCommand: celery -A ecommerce worker -l info
     autoDeploy: true
 
-  # Redis
+  # Redis service
   - type: redis
     name: alx-project-nexus-redis
     plan: free

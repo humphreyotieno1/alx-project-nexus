@@ -25,7 +25,8 @@ FROM python:3.11-slim
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH="/app/.local/bin:$PATH"
+    PATH="/app/.local/bin:$PATH" \
+    SECRET_KEY=dummy-key-for-build
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -37,6 +38,7 @@ WORKDIR /app
 
 # Create staticfiles directory
 RUN mkdir -p /app/staticfiles
+RUN chmod -R 755 /app/staticfiles
 
 # Copy Python wheels from builder
 COPY --from=builder /app/wheels /wheels
@@ -47,8 +49,14 @@ RUN pip install --no-cache /wheels/*
 # Copy project
 COPY . .
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
+# Create a script to handle collectstatic with fallback
+RUN echo '#!/bin/sh\n\
+# Set a default SECRET_KEY if not set\nif [ -z "$SECRET_KEY" ]; then\n    export SECRET_KEY="dummy-key-for-build"\nfi\n\
+# Run collectstatic\npython manage.py collectstatic --noinput\n' > /collectstatic.sh && \
+    chmod +x /collectstatic.sh
+
+# Use the script for collectstatic
+RUN /collectstatic.sh
 
 # Expose the port the app runs on
 EXPOSE 8000
