@@ -63,21 +63,9 @@ RUN pip install --no-cache /wheels/* \
 # Copy project
 COPY . .
 
-# Create a script to handle collectstatic with fallbacks
+# Create a script to handle collectstatic with fallbacks and run the application
 RUN echo '#!/bin/sh\n\
-# Set default environment variables if not set\n\
-if [ -z "$SECRET_KEY" ]; then\n\
-    export SECRET_KEY="ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7"\n\
-fi\n\
-if [ -z "$FRONTEND_URL" ]; then\n\
-    export FRONTEND_URL="http://localhost:3000"\n\
-fi\n\
-if [ -z "$DATABASE_URL" ]; then\n\
-    export DATABASE_URL="postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"\n\
-fi\n\
-\n\
-# Run collectstatic\n\
-python manage.py collectstatic --noinput --clear\n' > /entrypoint.sh && \
+# Set default environment variables if not set\nif [ -z "$SECRET_KEY" ]; then\n    export SECRET_KEY="ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7"\nfi\nif [ -z "$FRONTEND_URL" ]; then\n    export FRONTEND_URL="http://localhost:3000"\nfi\nif [ -z "$DATABASE_URL" ]; then\n    export DATABASE_URL="postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"\nfi\n\n# Run collectstatic\npython manage.py collectstatic --noinput --clear\n\n# Execute the CMD\nexec "$@"\n' > /entrypoint.sh && \
 chmod +x /entrypoint.sh
 
 # Expose the port the app runs on
