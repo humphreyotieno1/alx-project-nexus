@@ -67,7 +67,10 @@ services:
         fromService:
           type: redis
           property: connectionString
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
     startCommand: celery -A ecommerce worker -l info
     autoDeploy: true
 

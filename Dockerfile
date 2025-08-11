@@ -35,6 +35,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create and set work directory
 WORKDIR /app
 
+# Create staticfiles directory
+RUN mkdir -p /app/staticfiles
+
 # Copy Python wheels from builder
 COPY --from=builder /app/wheels /wheels
 
@@ -43,6 +46,9 @@ RUN pip install --no-cache /wheels/*
 
 # Copy project
 COPY . .
+
+# Collect static files
+RUN python manage.py collectstatic --noinput
 
 # Expose the port the app runs on
 EXPOSE 8000
