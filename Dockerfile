@@ -50,9 +50,13 @@ RUN pip install --no-cache /wheels/*
 COPY . .
 
 # Create a script to handle collectstatic with fallback
-RUN echo '#!/bin/sh\n\
-# Set a default SECRET_KEY if not set\nif [ -z "$SECRET_KEY" ]; then\n    export SECRET_KEY="dummy-key-for-build"\nfi\n\
-# Run collectstatic\npython manage.py collectstatic --noinput\n' > /collectstatic.sh && \
+RUN echo -e '#!/bin/sh\n\
+# Set a default SECRET_KEY if not set\n\
+if [ -z "$SECRET_KEY" ]; then\n\
+    export SECRET_KEY="dummy-key-for-build"\n\
+fi\n\
+# Run collectstatic\n\
+python manage.py collectstatic --noinput' > /collectstatic.sh && \
     chmod +x /collectstatic.sh
 
 # Use the script for collectstatic
