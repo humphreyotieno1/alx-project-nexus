@@ -28,7 +28,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.local/bin:$PATH" \
     SECRET_KEY=dummy-key-for-build \
-    ALLOWED_HOSTS="*"
+    ALLOWED_HOSTS="*" \
+    FRONTEND_URL="http://localhost:3000"
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -56,8 +57,14 @@ RUN echo $'#!/bin/sh\n\
 if [ -z "$SECRET_KEY" ]; then\n\
     export SECRET_KEY="dummy-key-for-build"\n\
 fi\n\
+if [ -z "$FRONTEND_URL" ]; then\n\
+    export FRONTEND_URL="http://localhost:3000"\n\
+fi\n\
 python manage.py collectstatic --noinput' > /collectstatic.sh && \
     chmod +x /collectstatic.sh
+
+# Debug: Print the script to verify its content
+RUN cat /collectstatic.sh
 
 # Use the script for collectstatic
 RUN /collectstatic.sh
