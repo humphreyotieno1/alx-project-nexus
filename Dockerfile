@@ -30,7 +30,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     # Default values for build time
     SECRET_KEY=ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7 \
     DEBUG=False \
-    ALLOWED_HOSTS=* \
+    ALLOWED_HOSTS=.onrender.com, \
     FRONTEND_URL=http://localhost:3000 \
     DATABASE_URL=postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require \
     DJANGO_SETTINGS_MODULE=ecommerce.settings \
