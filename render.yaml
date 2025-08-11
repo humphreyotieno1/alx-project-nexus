@@ -114,22 +114,3 @@ services:
     plan: free
     region: oregon
 
-  # PostgreSQL database
-  - type: postgres
-    name: alx-project-nexus-db
-    plan: free
-    region: oregon
-    databaseName: alx_project_nexus
-    user: alx_project_nexus_user
-    ipAllowList: []
-    # Uncomment and set to true to enable high availability (not available on free plan)
-    # highAvailability: false
-
-# Define environment groups (optional)
-environmentGroups:
-  - name: production
-    services:
-      - alx-project-nexus-web
-      - alx-project-nexus-worker
-      - alx-project-nexus-redis
-      - alx-project-nexus-db
