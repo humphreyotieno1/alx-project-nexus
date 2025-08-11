@@ -48,4 +48,4 @@ COPY . .
 EXPOSE 8000
 
 # Command to run the application
-CMD ["uvicorn", "ecommerce.wsgi:application", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "ecommerce.wsgi:application"]

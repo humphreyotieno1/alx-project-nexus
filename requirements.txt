@@ -20,6 +20,7 @@ djangorestframework==3.16.0
 djangorestframework_simplejwt==5.5.1
 drf-yasg==1.21.10
 filelock==3.18.0
+gunicorn==23.0.0
 identify==2.6.12
 idna==3.10
 inflection==0.5.1
