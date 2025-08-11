@@ -1,8 +1,8 @@
 services:
   - type: web
-    name: your-app-name
+    name: alx-project-nexus
     env: python
-    buildCommand: "./build.sh"
+    buildCommand: "./setup.sh"
     startCommand: "gunicorn ecommerce.wsgi:application"
     envVars:
       - key: PYTHON_VERSION
@@ -13,3 +13,11 @@ services:
         value: 4
       - key: DEBUG
         value: "False"
+      - key: ALLOWED_HOSTS
+        value: "alx-project-nexus-3ozp.onrender.com localhost 127.0.0.1"
+      - key: DJANGO_SETTINGS_MODULE
+        value: "ecommerce.settings"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: alx-project-nexus-db
+          property: connectionString
