@@ -15,9 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Upgrade pip and install Python dependencies
 COPY requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
 # Final stage
 FROM python:3.11-slim
@@ -26,7 +27,8 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.local/bin:$PATH" \
-    SECRET_KEY=dummy-key-for-build
+    SECRET_KEY=dummy-key-for-build \
+    ALLOWED_HOSTS="*"
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -50,12 +52,10 @@ RUN pip install --no-cache /wheels/*
 COPY . .
 
 # Create a script to handle collectstatic with fallback
-RUN echo -e '#!/bin/sh\n\
-# Set a default SECRET_KEY if not set\n\
+RUN echo $'#!/bin/sh\n\
 if [ -z "$SECRET_KEY" ]; then\n\
     export SECRET_KEY="dummy-key-for-build"\n\
 fi\n\
-# Run collectstatic\n\
 python manage.py collectstatic --noinput' > /collectstatic.sh && \
     chmod +x /collectstatic.sh
 
