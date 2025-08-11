@@ -1,116 +1,15 @@
-# Render Configuration File
-# Reference: https://render.com/docs/deploy-render-yaml
-
-# Global settings for all services
-globals:
-  envVars:
-    - key: PYTHON_VERSION
-      value: 3.11.7
-    - key: PYTHONUNBUFFERED
-      value: 1
-    - key: PYTHONDONTWRITEBYTECODE
-      value: 1
-    - key: DJANGO_SETTINGS_MODULE
-      value: ecommerce.settings
-
-# Define the services to deploy
 services:
-  # Web service (Django)
   - type: web
-    name: alx-project-nexus-web
-    env: docker
-    region: oregon
-    plan: free
-    dockerfile: Dockerfile
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 4 --worker-class gthread --threads 2 ecommerce.wsgi:application
+    name: your-app-name
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn ecommerce.wsgi:application"
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
       - key: SECRET_KEY
         generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
       - key: DEBUG
         value: "False"
-      - key: ALLOWED_HOSTS
-        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: alx-project-nexus-db
-          property: connectionString
-      - key: CELERY_BROKER_URL
-        fromService:
-          type: redis
-          property: connectionString
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          property: connectionString
-      - key: CORS_ALLOWED_ORIGINS
-        value: "http://localhost:3000,https://your-production-domain.com"
-      - key: FRONTEND_URL
-        value: "https://your-production-domain.com"
-      - key: DEFAULT_SHIPPING_COST
-        value: "10.00"
-      - key: TAX_RATE
-        value: "0.16"
-    buildEnvVars:
-      - key: ALLOWED_HOSTS
-        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
-      - key: SECRET_KEY
-        value: ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
-      - key: FRONTEND_URL
-        value: "http://localhost:3000"
-      - key: DATABASE_URL
-        value: "postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"
-    autoDeploy: true
-    numInstances: 1
-    healthCheckPath: /admin/
-    healthCheckTimeout: 120
-
-  # Celery worker
-  - type: worker
-    name: alx-project-nexus-worker
-    env: docker
-    region: oregon
-    plan: free
-    dockerfile: Dockerfile
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: celery -A ecommerce worker -l info
-    envVars:
-      - key: SECRET_KEY
-        fromService:
-          name: alx-project-nexus-web
-          property: SECRET_KEY
-      - key: DEBUG
-        value: "False"
-      - key: ALLOWED_HOSTS
-        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
-      - key: DATABASE_URL
-        fromService:
-          name: alx-project-nexus-web
-          property: DATABASE_URL
-      - key: CELERY_BROKER_URL
-        fromService:
-          type: redis
-          property: connectionString
-      - key: CELERY_RESULT_BACKEND
-        fromService:
-          type: redis
-          property: connectionString
-    buildEnvVars:
-      - key: ALLOWED_HOSTS
-        value: "alx-project-nexus-657z.onrender.com,localhost,127.0.0.1"
-      - key: SECRET_KEY
-        value: ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7
-      - key: DATABASE_URL
-        value: "postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"
-    autoDeploy: true
-
-  # Redis service
-  - type: redis
-    name: alx-project-nexus-redis
-    plan: free
-    region: oregon
-
