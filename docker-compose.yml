@@ -2,58 +2,44 @@ version: '3.8'
 
 services:
   web:
-    build:
-      context: .
-      target: builder
-    command: >
-      sh -c "python manage.py wait_for_db &&
-             python manage.py migrate &&
-             python manage.py collectstatic --no-input &&
-             gunicorn ecommerce.wsgi:application --bind 0.0.0.0:8000"
+    build: .
+    command: gunicorn --bind 0.0.0.0:8000 --workers 4 ecommerce.wsgi:application
     volumes:
       - .:/app
     ports:
       - "8000:8000"
     env_file:
       - .env
-    environment:
-      - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-django-insecure-default-key}
-      - DATABASE_URL=${DATABASE_URL}
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - ALLOWED_HOSTS=localhost,127.0.0.1
     depends_on:
+      - db
       - redis
-    restart: unless-stopped
 
-  celery:
-    build:
-      context: .
-      dockerfile: Dockerfile.celery
-    command: celery -A ecommerce worker --loglevel=info
+  db:
+    image: postgres:15-alpine
     volumes:
-      - .:/app
-    env_file:
-      - .env
+      - postgres_data:/var/lib/postgresql/data/
     environment:
-      - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:-django-insecure-default-key}
-      - DATABASE_URL=${DATABASE_URL}
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    depends_on:
-      - web
-      - redis
-    restart: unless-stopped
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+
+  celery:
+    build: .
+    command: celery -A ecommerce worker -l info
     volumes:
-      - redis_data:/data
-    restart: unless-stopped
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
 
 volumes:
-  redis_data:
+  postgres_data:

@@ -1,6 +1,7 @@
 # Render Configuration File
 # Reference: https://render.com/docs/deploy-render-yaml
 
+# Global settings for all services
 globals:
   envVars:
     - key: PYTHON_VERSION
@@ -9,30 +10,21 @@ globals:
       value: 1
     - key: PYTHONDONTWRITEBYTECODE
       value: 1
-    - key: DJANGO_SETTINGS_MODULE
-      value: ecommerce.settings
-    - key: DJANGO_ENV
-      value: production
-    - key: PATH
-      value: "/home/appuser/.local/bin:$PATH"
 
+# Define the services to deploy
 services:
-  # Web service
+  # Web service (Django)
   - type: web
     name: alx-project-nexus-web
-    env: python
+    env: docker
     region: oregon
     plan: free
+    dockerfile: Dockerfile
     buildCommand: |
       pip install --upgrade pip
       pip install -r requirements.txt
-      python manage.py collectstatic --noinput || echo "Warning: Collectstatic failed, but continuing build"
-    startCommand: >-
-      gunicorn ecommerce.wsgi:application 
-      --bind 0.0.0.0:$PORT 
-      --workers 4 
-      --threads 4 
-      --timeout 120
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 4 ecommerce.wsgi:application
     envVars:
       - key: SECRET_KEY
         generateValue: true
@@ -52,28 +44,23 @@ services:
         fromService:
           type: redis
           property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        value: "http://localhost:3000,https://your-production-domain.com"
+      - key: DEFAULT_SHIPPING_COST
+        value: "10.00"
+      - key: TAX_RATE
+        value: "0.16"
     autoDeploy: true
     numInstances: 1
 
   # Celery worker
   - type: worker
     name: alx-project-nexus-worker
-    env: python
+    env: docker
     region: oregon
     plan: free
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-    startCommand: celery -A ecommerce worker --loglevel=info
+    dockerfile: Dockerfile
     envVars:
-      - key: SECRET_KEY
-        fromService:
-          name: alx-project-nexus-web
-          property: SECRET_KEY
-      - key: DATABASE_URL
-        fromService:
-          name: alx-project-nexus-web
-          property: DATABASE_URL
       - key: CELERY_BROKER_URL
         fromService:
           type: redis
@@ -82,11 +69,12 @@ services:
         fromService:
           type: redis
           property: connectionString
-      - key: C_FORCE_ROOT
-        value: "true"
-    numInstances: 1
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A ecommerce worker -l info
+    autoDeploy: true
 
-  # Redis service
+  # Redis
   - type: redis
     name: alx-project-nexus-redis
     plan: free
+    region: oregon

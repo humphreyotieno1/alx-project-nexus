@@ -18,6 +18,7 @@ from pathlib import Path
 import environ
 import dj_database_url
 
+
 env = environ.Env(DEBUG=(bool, False))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -34,12 +35,12 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
 
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 
 AUTH_USER_MODEL = "users.User"
 
-FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")
+FRONTEND_URL = env("FRONTEND_URL")
 # Application definition
 
 SWAGGER_USE_COMPAT_RENDERERS = False
@@ -101,7 +102,7 @@ WSGI_APPLICATION = "ecommerce.wsgi.application"
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=env('DATABASE_URL', default=""),
+        default=env('DATABASE_URL'),
         conn_max_age=600,
     )
 }
@@ -155,9 +156,9 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
 
 # Configure CELERY settings
 # Add this to your Celery settings
@@ -199,25 +200,19 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # orders defaults.
-"""The defaults below are bound to change from one region to the other."""
-DEFAULT_SHIPPING_COST = env("DEFAULT_SHIPPING_COST", default=0)
-TAX_RATE = env("TAX_RATE", default=0)
+DEFAULT_SHIPPING_COST = env("DEFAULT_SHIPPING_COST")
+TAX_RATE = env("TAX_RATE")
 
-PAYMENT_CALLBACK_URLS = json.loads(os.getenv("PAYMENT_CALLBACK_URLS", default="{}"))
-CHAPA_SECRET_KEY = env("CHAPA_SECRET_KEY", default="")
-CHAPA_PUBLIC_KEY = env("CHAPA_PUBLIC_KEY", default="")
+PAYMENT_CALLBACK_URLS = json.loads(os.getenv("PAYMENT_CALLBACK_URLS"))
+CHAPA_SECRET_KEY = env("CHAPA_SECRET_KEY")
+CHAPA_PUBLIC_KEY = env("CHAPA_PUBLIC_KEY")
 
 
 # CORS SETUP
-CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", default="").split(",")
+CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS").split(",")
 
-if not DEBUG:
-    # Trust the X-Forwarded-Proto header from Railway
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-    # Force all URLs and redirects to be HTTPS
-    SECURE_SSL_REDIRECT = True
-
-    # If you're generating absolute URLs in serializers/views
-    CSRF_COOKIE_SECURE = True
-    SESSION_COOKIE_SECURE = True
+# ensure no HTTPS redirects
+SECURE_SSL_REDIRECT = False
+SECURE_PROXY_SSL_HEADER = None
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
