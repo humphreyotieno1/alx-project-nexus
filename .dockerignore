@@ -1,7 +1,3 @@
-# Git
-.git
-.gitignore
-
 # Python
 __pycache__/
 *.py[cod]
@@ -30,10 +26,7 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
-# Environment files
-.env
-.venv
-env/
+# Virtual environment
 venv/
 ENV/
 
@@ -43,32 +36,31 @@ ENV/
 *.swp
 *.swo
 
-# Static files (collected during build)
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Static files
 staticfiles/
 media/
 
 # Node
 node_modules/
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Testing
 .coverage
 htmlcov/
 .pytest_cache/
-.coverage.*
-*.cover
-.hypothesis/
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Local development
+local_settings.py
 .env.local
-.env.*.local
-
-# Docker
-Dockerfile
-docker-compose*.yml
-.dockerignore
 
 # Render
-render.yaml
+.render-debug*

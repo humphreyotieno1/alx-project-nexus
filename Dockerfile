@@ -1,13 +1,11 @@
-# Use Python 3.11 slim as the base image
+# Stage 1: Build dependencies
 FROM python:3.11-slim as builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
-
-# Set work directory
-WORKDIR /app
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -15,62 +13,64 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install Python dependencies
-COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+# Create and set working directory
+WORKDIR /app
 
-# Final stage
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
+
+# Stage 2: Runtime
 FROM python:3.11-slim
 
-# Set environment variables for build and runtime
+# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.local/bin:$PATH" \
-    SECRET_KEY=dummy-key-for-build \
-    ALLOWED_HOSTS="*" \
-    FRONTEND_URL="http://localhost:3000"
+    # Default values for build time
+    SECRET_KEY=ucuqp5616lwcb8&ne1-a^r*^rs9%!-wa$t!m@zbrog60u=cj_7 \
+    DEBUG=False \
+    ALLOWED_HOSTS=* \
+    FRONTEND_URL=http://localhost:3000 \
+    DATABASE_URL=postgresql://neondb_owner:npg_NKBSZ0n3Tzeu@ep-silent-resonance-a8om4bn6-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require \
+    DJANGO_SETTINGS_MODULE=ecommerce.settings \
+    # Add other default environment variables here
+    CELERY_BROKER_URL=redis://redis:6379/0 \
+    CELERY_RESULT_BACKEND=redis://redis:6379/0
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create and set work directory
+# Create and set working directory
 WORKDIR /app
 
-# Create staticfiles directory
-RUN mkdir -p /app/staticfiles
-RUN chmod -R 755 /app/staticfiles
+# Create necessary directories
+RUN mkdir -p /app/staticfiles \
+    && mkdir -p /app/mediafiles \
+    && chmod -R 755 /app/staticfiles \
+    && chmod -R 755 /app/mediafiles
 
 # Copy Python wheels from builder
 COPY --from=builder /app/wheels /wheels
 
 # Install application dependencies
-RUN pip install --no-cache /wheels/*
+RUN pip install --no-cache /wheels/* \
+    && rm -rf /wheels \
+    && rm -rf /root/.cache/pip/*
 
 # Copy project
 COPY . .
 
-# Create a script to handle collectstatic with fallback
-RUN echo $'#!/bin/sh\n\
-if [ -z "$SECRET_KEY" ]; then\n\
-    export SECRET_KEY="dummy-key-for-build"\n\
-fi\n\
-if [ -z "$FRONTEND_URL" ]; then\n\
-    export FRONTEND_URL="http://localhost:3000"\n\
-fi\n\
-python manage.py collectstatic --noinput' > /collectstatic.sh && \
-    chmod +x /collectstatic.sh
-
-# Debug: Print the script to verify its content
-RUN cat /collectstatic.sh
-
-# Use the script for collectstatic
-RUN /collectstatic.sh
+# Create a script to handle collectstatic with fallbacks
+RUN echo '#!/bin/sh\n\
+# Set default environment variables if not set\nif [ -z "$SECRET_KEY" ]; then\n    export SECRET_KEY="dummy-key-for-runtime"\nfi\nif [ -z "$FRONTEND_URL" ]; then\n    export FRONTEND_URL="http://localhost:3000"\nfi\nif [ -z "$DATABASE_URL" ]; then\n    export DATABASE_URL="sqlite:///db.sqlite3"\nfi\n\n# Run collectstatic\npython manage.py collectstatic --noinput --clear\n' > /entrypoint.sh \
+    && chmod +x /entrypoint.sh
 
 # Expose the port the app runs on
 EXPOSE 8000
 
-# Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "ecommerce.wsgi:application"]
+# Run the application
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "--worker-class", "gthread", "--threads", "2", "ecommerce.wsgi:application"]
